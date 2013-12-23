@@ -1,0 +1,75 @@
+﻿<UserControl x:Class="DestifySharp.NotificationCtrl"
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:tb="http://www.hardcodet.net/taskbar" 
+             Height="120" Width="350">
+    <UserControl.Resources>
+        <Storyboard x:Key="FadeIn">
+            <DoubleAnimationUsingKeyFrames BeginTime="00:00:00"
+                                               Storyboard.TargetName="grid1"
+                                               Storyboard.TargetProperty="(UIElement.Opacity)">
+                <SplineDoubleKeyFrame KeyTime="00:00:00"
+                                          Value="0" />
+                <SplineDoubleKeyFrame KeyTime="00:00:01"
+                                          Value="0.95" />
+                <SplineDoubleKeyFrame KeyTime="00:00:03"
+                                          Value="0.95" />
+                <!--				<SplineDoubleKeyFrame KeyTime="00:00:05" Value="0"/>-->
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="FadeCloseButton">
+            <DoubleAnimationUsingKeyFrames BeginTime="00:00:00"
+                                           Storyboard.TargetName="image1"
+                                           Storyboard.TargetProperty="(UIElement.Opacity)">
+                <SplineDoubleKeyFrame KeyTime="00:00:00"
+                                      Value="1" />
+                <SplineDoubleKeyFrame KeyTime="00:00:00.3000000"
+                                      Value="0.4" />
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="FadeBack">
+            <DoubleAnimationUsingKeyFrames BeginTime="00:00:00"
+                                           Storyboard.TargetName="grid1"
+                                           Storyboard.TargetProperty="(UIElement.Opacity)">
+                <SplineDoubleKeyFrame KeyTime="00:00:00"
+                                      Value="1" />
+                <SplineDoubleKeyFrame KeyTime="00:00:00.3000000"
+                                      Value="1" />
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="FadeOut"
+                    Completed="OnFadeOutCompleted">
+            <DoubleAnimationUsingKeyFrames BeginTime="00:00:00"
+                                           Storyboard.TargetName="grid1"
+                                           Storyboard.TargetProperty="(UIElement.Opacity)">
+                <SplineDoubleKeyFrame KeyTime="00:00:00"
+                                      Value="1" />
+                <SplineDoubleKeyFrame KeyTime="00:00:00.3000000"
+                                      Value="0.2" />
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+    </UserControl.Resources>
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="tb:TaskbarIcon.BalloonShowing">
+            <BeginStoryboard Storyboard="{StaticResource FadeIn}"
+                             x:Name="FadeIn_BeginStoryboard" />
+        </EventTrigger>
+        <EventTrigger RoutedEvent="Mouse.MouseEnter">
+            <StopStoryboard BeginStoryboardName="FadeIn_BeginStoryboard" />
+            <BeginStoryboard x:Name="FadeBack_BeginStoryboard1"
+                             Storyboard="{StaticResource FadeBack}" />
+        </EventTrigger>
+        <EventTrigger RoutedEvent="tb:TaskbarIcon.BalloonClosing">
+            <BeginStoryboard Storyboard="{StaticResource FadeOut}"
+                             x:Name="FadeOut_BeginStoryboard" />
+        </EventTrigger>
+    </UserControl.Triggers>
+    <Grid Name="grid1" MouseEnter="Grid_MouseEnter">
+        <TextBlock Text="Title" Height="28" HorizontalAlignment="Left" Name="titleLbl" VerticalAlignment="Top" TextAlignment="Center" Margin="12,12,0,0" Foreground="White" />
+        <TextBlock Text="Subtitle" Height="28" HorizontalAlignment="Left" Margin="12,0,0,4" Name="subtitleLbl" VerticalAlignment="Bottom" TextAlignment="Center" Foreground="White" />
+        <TextBlock Text="Message" Height="50" HorizontalAlignment="Left" Margin="12,36,0,0" Name="messageLbl" VerticalAlignment="Top" Width="326" Foreground="White" />
+        <TextBlock Text="Topic" Height="28" HorizontalAlignment="Center" Margin="0,12,0,0" Name="topicLbl" VerticalAlignment="Top" TextAlignment="Center" Foreground="White" />
+        <TextBlock Text="Time" Height="28" HorizontalAlignment="Right" Margin="0,0,5,2" Name="timeLbl" VerticalAlignment="Bottom" TextAlignment="Center" Foreground="White" Background="{x:Null}"></TextBlock>
+        <Image Name="image1" Width="16" Height="16" Margin="0,11,4,0" HorizontalAlignment="Right" VerticalAlignment="Top" MouseDown="image1_MouseDown" />
+    </Grid>
+</UserControl>

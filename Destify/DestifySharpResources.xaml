@@ -1,0 +1,20 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:tb="http://www.hardcodet.net/taskbar"
+                    xmlns:local="clr-namespace:DestifySharp">
+
+    <ContextMenu x:Shared="false" x:Key="SysTrayMenu">
+        <MenuItem Header="History" Command="{Binding ViewHistoryCommand}" />
+        <MenuItem Header="Options" Command="{Binding ViewOptionsCommand}" />
+        <MenuItem Header="Exit" Command="{Binding ExitApplicationCommand}" />
+    </ContextMenu>
+    <tb:TaskbarIcon x:Key="NotifyIcon"
+                    IconSource="/Destify.ico"
+                    ToolTipText="right-click for menu"
+                    ContextMenu="{StaticResource SysTrayMenu}">
+
+    <tb:TaskbarIcon.DataContext>
+        <local:NotifyIconViewModel />
+    </tb:TaskbarIcon.DataContext>
+    </tb:TaskbarIcon>
+</ResourceDictionary>

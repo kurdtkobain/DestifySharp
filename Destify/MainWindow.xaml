@@ -1,0 +1,8 @@
+﻿<Window x:Class="DestifySharp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="62" Width="107" WindowStyle="None" Visibility="Hidden">
+    <Grid>
+        
+    </Grid>
+</Window>

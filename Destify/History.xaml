@@ -1,0 +1,14 @@
+﻿<Window x:Class="DestifySharp.History"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="History" Height="269" Width="609" Loaded="Window_Loaded" Icon="/DestifySharp;component/Destify.ico" ShowInTaskbar="False">
+    <Window.ContextMenu>
+        <ContextMenu >
+            <MenuItem Header="Clear History" Click="MenuItem_Click" />
+        </ContextMenu>
+    </Window.ContextMenu>
+    <Grid>
+        <DataGrid AutoGenerateColumns="True" HorizontalAlignment="Stretch" Name="dataGrid1" VerticalAlignment="Stretch" ColumnWidth="*">
+        </DataGrid>
+    </Grid>
+</Window>

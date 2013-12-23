@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="http://www.google.com/jsapi"></script>
+<script>
+    google.load("jquery", "1");
+</script>
+<script src="jquery.min.js"></script>
+<script>
+function success(){
+};
+function sendIt(encrypted){
+if(encrypted == false){
+data = "--=--\r\ncheck=Destify\r\ntitle=Destify@Destify\r\nsubtitle=(null)\r\nmessage=Kk get all data\r\ntopic=iMessage\r\ntime=06:59\r\nicon=(null)\r\n--=--\r\n";
+}else{
+data = "--=--\r\ncheck=Uiagiwc\r\ntitle=Uiagiwc@Uiagiwc\r\nsubtitle=\r\nmessage=Eifg mvwangv pwy\r\ntopic=zQmfsrkm\r\ntime=22:44\r\nicon=(null)\r\n--=--\r\n";
+}
+$.post( "http://192.168.1.166:3128/", data, success() );
+};
+</script>
+</head>
+<body>
+<button onclick="sendIt(false)">send unencrypted</button> 
+<br/>
+<button onclick="sendIt(true)">send encrypted</button> 
+</body>
+</html>
