@@ -6,6 +6,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using Hardcodet.Wpf.TaskbarNotification;
+using PNGDecrush;
 using STA.Settings;
 
 namespace DestifySharp
@@ -95,6 +96,7 @@ namespace DestifySharp
             alert.Subtitle = input[3];
             alert.Message = input[4];
             alert.Time = input[6];
+            alert.Icon = Utilities.checkDecrush(input[7]);
 
             notifyIcon.ShowCustomBalloon(alert, PopupAnimation.Slide, displaytime * 1000);
         }
@@ -171,7 +173,7 @@ namespace DestifySharp
                     if (s != "\r\n")
                     {
                         string[] tmp = s.Split(Convert.ToChar("="));
-                        if (shouldDecode && values[i] != "(null)")
+                        if (shouldDecode && tmp[1] != "(null)")
                         {
                             values[i] = Utilities.decode(tmp[1], cipher);
                         }

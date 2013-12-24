@@ -17,7 +17,7 @@ namespace DestifySharp
     {
         private INIFile styleini;
         private double width, height;
-        private string closeimgsrc, bgimgsrc, styledir;
+        private string closeimgsrc, bgimgsrc, styledir, iconsrc;
         private bool isClosing = false;
 
         public string Title
@@ -40,7 +40,10 @@ namespace DestifySharp
         {
             set { timeLbl.Text = value; }
         }
-
+        public string Icon
+        {
+            set { iconsrc = value; }
+        }
 
         public NotificationCtrl( string style)
         {
