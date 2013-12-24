@@ -20,7 +20,7 @@ namespace DestifySharp
         private TaskbarIcon notifyIcon;
         private HttpListener listener;
         private Thread listenerTH;
-        private string port,theme,cipher;
+        private string port, theme, cipher;
         private int displaytime;
         bool running = true;
         private INIFile settings = new INIFile("settings.ini");
@@ -36,22 +36,27 @@ namespace DestifySharp
             string prefixes = String.Format(@"http://+:{0}/", port);
             listener.Prefixes.Add(prefixes);
             listener.AuthenticationSchemes = AuthenticationSchemes.Anonymous;
-
-            listener.Start();
-            this.listenerTH = new Thread(new ParameterizedThreadStart(startListener));
-            this.listenerTH.Name = @"HTTPListener Thread";
-            this .listenerTH.SetApartmentState(ApartmentState.STA);
-            this.listenerTH.Start();
-
-            string text = String.Format("{0}:{1}", LocalIPAddress(), port);
-            notifyIcon.ShowBalloonTip(@"Server Started", text, notifyIcon.Icon);
+            try
+            {
+                listener.Start();
+                this.listenerTH = new Thread(new ParameterizedThreadStart(startListener));
+                this.listenerTH.Name = @"HTTPListener Thread";
+                this.listenerTH.SetApartmentState(ApartmentState.STA);
+                this.listenerTH.Start();
+                string text = String.Format("{0}:{1}", localIPAddress(), port);
+                notifyIcon.ShowBalloonTip(@"Server Started", text, notifyIcon.Icon);
+            }
+            catch
+            {
+                notifyIcon.ShowBalloonTip(@"Error", "Failed to start server, could not bind port.", BalloonIcon.Error);
+            }
         }
 
         protected override void OnExit(ExitEventArgs e)
         {
             notifyIcon.Dispose();
             terminateListenerTH();
-            listener.Stop();
+            if(listener.IsListening)listener.Stop();
             base.OnExit(e);
         }
 
@@ -59,7 +64,7 @@ namespace DestifySharp
         {
             var db = new SQLiteDatabase();
             db.ExecuteNonQuery(@"CREATE TABLE IF NOT EXISTS history (title, subtitle, message, time);");
-            string tmpinsert = String.Format(@"INSERT INTO history VALUES ('{0}', '{1}', '{2}', '{3}');", input[2], input[3],input[4], input[6]);
+            string tmpinsert = String.Format(@"INSERT INTO history VALUES ('{0}', '{1}', '{2}', '{3}');", input[2], input[3], input[4], input[6]);
             db.ExecuteNonQuery(tmpinsert);
 
         }
@@ -74,7 +79,7 @@ namespace DestifySharp
             NotificationCtrl alert = new NotificationCtrl(theme);
             if (input[5] == "iMessage")
             {
-                alert.Title = String.Format(@"iMessage: {0}",input[2]);
+                alert.Title = String.Format(@"iMessage: {0}", input[2]);
                 alert.Topic = "";
             }
             else
@@ -82,13 +87,13 @@ namespace DestifySharp
                 alert.Title = input[2];
                 alert.Topic = input[5];
             }
-            
+
             alert.Subtitle = input[3];
             alert.Message = input[4];
             alert.Time = input[6];
 
             //show balloon and close it after 4 seconds
-            notifyIcon.ShowCustomBalloon(alert, PopupAnimation.Slide, displaytime*1000);
+            notifyIcon.ShowCustomBalloon(alert, PopupAnimation.Slide, displaytime * 1000);
         }
 
         void loadSettings()
@@ -130,18 +135,25 @@ namespace DestifySharp
 
         private void listenerCallback(IAsyncResult result)
         {
-            if(!running) return;
+            if (!running) return;
             var context = listener.EndGetContext(result);
             Thread.Sleep(1000);
             if (context.Request.HttpMethod == "POST")
             {
                 string data_text = new StreamReader(context.Request.InputStream,
                                                     context.Request.ContentEncoding).ReadToEnd();
+
+#if DEBUG
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(@"Debug.txt", true))
+                {
+                    file.WriteLine(data_text);
+                }
+#endif
                 bool shouldDecode = !data_text.Contains("Destify");
-                if(cipher=="") shouldDecode = false;
+                if (cipher == "") shouldDecode = false;
                 string[] lines = Regex.Split(data_text, "\r\n");
                 string[] values = new string[9];
-                for (int i = 0; i < lines.Length-1; i++)
+                for (int i = 0; i < lines.Length - 1; i++)
                 {
                     string s = lines[i];
                     if (s != "\r\n")
@@ -150,7 +162,8 @@ namespace DestifySharp
                         if (shouldDecode && values[i] != "(null)")
                         {
                             values[i] = decode(tmp[1], cipher);
-                        }else
+                        }
+                        else
                         {
                             values[i] = tmp[1];
                         }
@@ -160,12 +173,14 @@ namespace DestifySharp
 
                 if (values[1] == "Destify")
                 {
-                    this.Dispatcher.Invoke((Action) (() => sendNotify(values)));
-                }else
+                    this.Dispatcher.Invoke((Action)(() => sendNotify(values)));
+                }
+                else
                 {
                     notifyIcon.ShowBalloonTip(@"Decoding failed!", @"Please check your Cipher Key!", notifyIcon.Icon);
                 }
-            }else
+            }
+            else
             {
                 string responseString = "<html><head><title>DestifySharp by KAMY Studios</title></head><body><meta HTTP-EQUIV=\"REFRESH\" content=\"0; url=http://kamy.tk\"></body></html>";
                 byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
@@ -180,7 +195,7 @@ namespace DestifySharp
             context.Response.Close();
         }
 
-        private string LocalIPAddress()
+        private static string localIPAddress()
         {
             IPHostEntry host;
             string localIP = "";
@@ -231,6 +246,40 @@ namespace DestifySharp
                 {
                     nCh = (char)(aCh);
                     ctext.Append(NText[i]);
+                }
+            }
+            return ctext.ToString();
+        }
+
+        public static String encode(String text, String code)
+        {
+            StringBuilder ctext = new StringBuilder();
+            for (int i = 0, a = 0; i < text.Length; i++)
+            {
+                int kiCh = (int)code.ToUpper()[a % code.Length];
+                int aiCh = (int)text[i];
+                int niCh = (int)' ';
+                if (aiCh >= 65 && aiCh <= 90)
+                {
+                    aiCh = text[i];
+                    niCh = (aiCh + kiCh - 65);
+                    if (niCh > 90) { niCh -= 26; }
+                    ctext.Append(niCh);
+                    a++;
+                }
+                else if (aiCh >= 97 && aiCh <= 122)
+                {
+                    aiCh = text[i];
+                    niCh = (aiCh + kiCh - 65);
+                    if (niCh <= 97) { niCh += 26; }
+                    if (niCh > 122) { niCh -= 26; }
+                    ctext.Append(niCh);
+                    a++;
+                }
+                else
+                {
+                    niCh = aiCh;
+                    ctext.Append(niCh);
                 }
             }
             return ctext.ToString();
