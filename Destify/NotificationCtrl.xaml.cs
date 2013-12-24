@@ -82,8 +82,6 @@ namespace DestifySharp
             string tmpbgsrc = String.Format(@"./{0}/{1}",styledir,bgimgsrc);
             grid1.Background = new ImageBrush(new BitmapImage(new Uri(tmpbgsrc, UriKind.Relative))); ;
             string tmpclosesrc = String.Format(@"./{0}/{1}", styledir, closeimgsrc);
-            //ImageSourceConverter converter = new ImageSourceConverter();
-            //image1.Source = (ImageSource)converter.ConvertFromString(tmpclosesrc);
             image1.Source = new BitmapImage(new Uri(tmpclosesrc, UriKind.Relative));
         }
 

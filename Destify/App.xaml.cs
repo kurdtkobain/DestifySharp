@@ -58,6 +58,9 @@ namespace DestifySharp
             base.OnExit(e);
         }
 
+        /// <summary>
+        /// Adds notification to history database.
+        /// </summary>
         void addNotificationToHistory(string[] input)
         {
             var db = new SQLiteDatabase();
@@ -67,6 +70,9 @@ namespace DestifySharp
 
         }
 
+        /// <summary>
+        /// Formats and displays notification data.
+        /// </summary>
         private void sendNotify(string[] input)
         {
             addNotificationToHistory(input);
@@ -90,10 +96,12 @@ namespace DestifySharp
             alert.Message = input[4];
             alert.Time = input[6];
 
-            //show balloon and close it after 4 seconds
             notifyIcon.ShowCustomBalloon(alert, PopupAnimation.Slide, displaytime * 1000);
         }
 
+        /// <summary>
+        /// Loads settings.
+        /// </summary>
         void loadSettings()
         {
             port = settings.GetValue("System", "Port", "3128");
@@ -102,6 +110,9 @@ namespace DestifySharp
             theme = settings.GetValue("Theme", "folder", "default");
         }
 
+        /// <summary>
+        /// Saves settings.
+        /// </summary>
         void saveSettings()
         {
             settings.SetValue("System", "Port", port);
@@ -120,6 +131,9 @@ namespace DestifySharp
             }
         }
 
+        /// <summary>
+        /// Shuts down listener thread.
+        /// </summary>
         void terminateListenerTH()
         {
             running = false;
@@ -165,7 +179,6 @@ namespace DestifySharp
                         {
                             values[i] = tmp[1];
                         }
-                        //Console.WriteLine(values[i]);
                     }
                 }
 

@@ -7,6 +7,9 @@ namespace DestifySharp
 {
     class Utilities
     {
+        /// <summary>
+        /// Gets local IP address.
+        /// </summary>
         public static string localIPAddress()
         {
             IPHostEntry host;
@@ -23,6 +26,9 @@ namespace DestifySharp
             return localIP;
         }
 
+        /// <summary>
+        /// Decodes string.
+        /// </summary>
         public static String decode(String NText, String code)
         {
             StringBuilder ctext = new StringBuilder();
@@ -63,6 +69,9 @@ namespace DestifySharp
             return ctext.ToString();
         }
 
+        /// <summary>
+        /// Encodes string.
+        /// </summary>
         public static String encode(String text, String code)
         {
             StringBuilder ctext = new StringBuilder();
