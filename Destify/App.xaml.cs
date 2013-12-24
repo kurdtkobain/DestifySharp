@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Net;
-using System.Net.Sockets;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
@@ -43,7 +41,7 @@ namespace DestifySharp
                 this.listenerTH.Name = @"HTTPListener Thread";
                 this.listenerTH.SetApartmentState(ApartmentState.STA);
                 this.listenerTH.Start();
-                string text = String.Format("{0}:{1}", localIPAddress(), port);
+                string text = String.Format("{0}:{1}", Utilities.localIPAddress(), port);
                 notifyIcon.ShowBalloonTip(@"Server Started", text, notifyIcon.Icon);
             }
             catch
@@ -56,7 +54,7 @@ namespace DestifySharp
         {
             notifyIcon.Dispose();
             terminateListenerTH();
-            if(listener.IsListening)listener.Stop();
+            if (listener.IsListening) listener.Stop();
             base.OnExit(e);
         }
 
@@ -161,7 +159,7 @@ namespace DestifySharp
                         string[] tmp = s.Split(Convert.ToChar("="));
                         if (shouldDecode && values[i] != "(null)")
                         {
-                            values[i] = decode(tmp[1], cipher);
+                            values[i] = Utilities.decode(tmp[1], cipher);
                         }
                         else
                         {
@@ -193,96 +191,6 @@ namespace DestifySharp
             context.Response.StatusCode = 200;
             context.Response.StatusDescription = "OK";
             context.Response.Close();
-        }
-
-        private static string localIPAddress()
-        {
-            IPHostEntry host;
-            string localIP = "";
-            host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (IPAddress ip in host.AddressList)
-            {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    localIP = ip.ToString();
-                    break;
-                }
-            }
-            return localIP;
-        }
-
-        public static String decode(String NText, String code)
-        {
-            StringBuilder ctext = new StringBuilder();
-
-            int a = 0;
-            for (int i = 0; i < NText.Length; i++)
-            {
-                char key = code.ToUpper()[a % code.Length];
-                char aCh = NText[i];
-                char nCh = ' ';
-
-                if (aCh >= 65 && aCh <= 90)
-                {
-                    aCh = NText[i];
-                    nCh = (char)(aCh + 65 - key);
-                    if ((int)nCh < 65) { nCh += (char)(26); }
-                    if (NText[i] >= 97) { nCh += (char)(32); }
-                    ctext.Append(nCh);
-                    a++;
-                }
-                else if (aCh >= 97 && aCh <= 122)
-                {
-                    aCh = NText[i];
-                    nCh = (char)(aCh + 65 - key);
-                    if ((int)nCh < 97)
-                    {
-                        nCh += (char)(26);
-                    }
-                    ctext.Append(nCh);
-                    a++;
-                }
-                else
-                {
-                    nCh = (char)(aCh);
-                    ctext.Append(NText[i]);
-                }
-            }
-            return ctext.ToString();
-        }
-
-        public static String encode(String text, String code)
-        {
-            StringBuilder ctext = new StringBuilder();
-            for (int i = 0, a = 0; i < text.Length; i++)
-            {
-                int kiCh = (int)code.ToUpper()[a % code.Length];
-                int aiCh = (int)text[i];
-                int niCh = (int)' ';
-                if (aiCh >= 65 && aiCh <= 90)
-                {
-                    aiCh = text[i];
-                    niCh = (aiCh + kiCh - 65);
-                    if (niCh > 90) { niCh -= 26; }
-                    ctext.Append(niCh);
-                    a++;
-                }
-                else if (aiCh >= 97 && aiCh <= 122)
-                {
-                    aiCh = text[i];
-                    niCh = (aiCh + kiCh - 65);
-                    if (niCh <= 97) { niCh += 26; }
-                    if (niCh > 122) { niCh -= 26; }
-                    ctext.Append(niCh);
-                    a++;
-                }
-                else
-                {
-                    niCh = aiCh;
-                    ctext.Append(niCh);
-                }
-            }
-            return ctext.ToString();
         }
     }
 }
