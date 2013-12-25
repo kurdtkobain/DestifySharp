@@ -167,7 +167,13 @@ namespace DestifySharp
                         string[] tmp = s.Split(Convert.ToChar("="));
                         if (shouldDecode && tmp[1] != "(null)")
                         {
-                            values[i] = Utilities.decode(tmp[1], cipher);
+                            if (tmp[0] != "time" || tmp[0] != "icon")
+                            {
+                                values[i] = Utilities.decode(tmp[1], cipher);
+                            }else
+                            {
+                                values[i] = tmp[1];
+                            }
                         }
                         else
                         {
