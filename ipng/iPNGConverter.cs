@@ -146,8 +146,8 @@ namespace IPNGConverter
 
         private bool convertDataTrunk(PNGIHDRTrunk ihdrTrunk, byte[] conversionBuffer, int nMaxInflateBuffer)
         {
-            long inflatedSize = inflate(conversionBuffer, nMaxInflateBuffer);
-            byte[] conversionData = getInflateData();
+            long inflatedSize = inflate(conversionBuffer, nMaxInflateBuffer); //cant figure out why conversionBuffer does not get filled with data
+            byte[] conversionData = getInflateData();                         //so i have to get the data manually
 
             // Switch the color
             int nIndex = 0;
