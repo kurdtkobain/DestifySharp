@@ -93,24 +93,6 @@ namespace IPNGConverter
             deflateStream.Write(bufferin,0,bufferin.Length);
             conversionBuffer = ms.GetBuffer();
             return deflateStream.TotalOut;
-            /*ZlibCodec inflater = new ZlibCodec();
-            int nResult = inflater.InitializeInflate(15);
-            inflater.InputBuffer = bufferin;
-            inflater.AvailableBytesIn = bufferin.Length;
-            inflater.NextIn = 0;
-            inflater.OutputBuffer = conversionBuffer;
-            inflater.NextOut = 0;
-            try
-            {
-                nResult = inflater.Inflate(FlushType.None);
-                checkResultStatus(nResult);
-            }
-            finally
-            {
-                inflater.EndInflate();
-            }
-
-            return inflater.TotalBytesOut;*/
         }
 
         private ZlibCodec deflate(byte[] buffer, int length, int nMaxInflateBuffer)
