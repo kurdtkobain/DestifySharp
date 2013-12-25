@@ -6,7 +6,6 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using Hardcodet.Wpf.TaskbarNotification;
-using PNGDecrush;
 using STA.Settings;
 
 namespace DestifySharp
@@ -77,11 +76,12 @@ namespace DestifySharp
         private void sendNotify(string[] input)
         {
             addNotificationToHistory(input);
+            input[7] = Utilities.checkConvert(input[7]);
             for (int i = 0; i < input.Length; i++)
             {
                 if (input[i] == "(null)") input[i] = "";
             }
-            NotificationCtrl alert = new NotificationCtrl(theme);
+            NotificationCtrl alert = new NotificationCtrl(theme, input[7]);
             if (input[5] == "iMessage")
             {
                 alert.Title = String.Format(@"iMessage: {0}", input[2]);
@@ -96,7 +96,6 @@ namespace DestifySharp
             alert.Subtitle = input[3];
             alert.Message = input[4];
             alert.Time = input[6];
-            alert.Icon = Utilities.checkDecrush(input[7]);
 
             notifyIcon.ShowCustomBalloon(alert, PopupAnimation.Slide, displaytime * 1000);
         }
@@ -156,13 +155,6 @@ namespace DestifySharp
             {
                 string data_text = new StreamReader(context.Request.InputStream,
                                                     context.Request.ContentEncoding).ReadToEnd();
-
-#if DEBUG
-                using (System.IO.StreamWriter file = new System.IO.StreamWriter(@"Debug.txt", true))
-                {
-                    file.WriteLine(data_text);
-                }
-#endif
                 bool shouldDecode = !data_text.Contains("Destify");
                 if (cipher == "") shouldDecode = false;
                 string[] lines = Regex.Split(data_text, "\r\n");

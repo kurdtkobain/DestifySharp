@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
-using PNGDecrush;
+using IPNGConverter;
 
 namespace DestifySharp
 {
@@ -108,55 +108,20 @@ namespace DestifySharp
             }
             return ctext.ToString();
         }
-
         /// <summary>
-        /// C# port of Destify's hexStringToByteArray
-        /// </summary>
-        public static byte[] hexStringToByteArray(String s)
-        {
-            s = s.Substring(1, s.Length - 1).Replace(" ", "");
-
-            int len = s.Length;
-            byte[] data = new byte[len / 2];
-            for (int i = 0; i < len; i += 2)
-            {
-                data[i / 2] = (byte)((getIntegerValue(s[i], 16) << 4) + getIntegerValue(s[i + 1], 16));
-            }
-
-            return data;
-        }
-
-        /// <summary>
-        /// Native C# version of hexStringToByteArray (not tested)
+        /// Native C# version of hexStringToByteArray
         /// </summary>
         public static byte[] StringToByteArray(String hex)
         {
+            hex = hex.Substring(1, hex.Length - 1).Replace(" ", "");
             int NumberChars = hex.Length / 2;
             byte[] bytes = new byte[NumberChars];
-            using (var sr = new StringReader(hex))
+            using (StringReader sr = new StringReader(hex))
             {
                 for (int i = 0; i < NumberChars; i++)
-                    bytes[i] =
-                      Convert.ToByte(new string(new char[2] { (char)sr.Read(), (char)sr.Read() }), 16);
+                    bytes[i] = Convert.ToByte(new string(new char[2] { (char)sr.Read(), (char)sr.Read() }), 16);
             }
             return bytes;
-        }
-
-        /// <summary>
-        /// Like Java's Character.digit (only works for 0-9, a-z, A-Z)
-        /// </summary>
-        static int getIntegerValue(char c, int radix)
-        {
-            int val = -1;
-            if (char.IsDigit(c))
-                val = (int)(c - '0');
-            else if (char.IsLower(c))
-                val = (int)(c - 'a') + 10;
-            else if (char.IsUpper(c))
-                val = (int)(c - 'A') + 10;
-            if (val >= radix)
-                val = -1;
-            return val;
         }
 
         /// <summary>
@@ -183,30 +148,28 @@ namespace DestifySharp
         /// <summary>
         /// Checks if the program should decrush the png data
         /// </summary>
-        public static string checkDecrush(string input)
+        public static string checkConvert(string input)
         {
-            if (input != "(null)" && input != "")
+            if (input != "(null)" || input != "")
             {
                 string fHash = Utilities.MD5(input);
-                byte[] bytes = Utilities.hexStringToByteArray(input);
-                string outpng = String.Format("Resources/{0}.png", fHash);
-                using (FileStream uncFile = File.Create(outpng))
+                byte[] bytes = Utilities.StringToByteArray(input);
+                string inpng = String.Format("./Resources/{0}.png", fHash);
+                string outpng = String.Format("./Resources/{0}-new.png", fHash);
+                if(File.Exists(outpng))
                 {
-                    MemoryStream cStream = new MemoryStream();
-                    cStream.Write(bytes,0,bytes.Length);
-                    try
-                    {
-                        PNGDecrusher.Decrush(cStream, uncFile);
-                        cStream.Close();
-                        return outpng;
-                    }
-                    catch (InvalidDataException)
-                    {
-                        // decrushing failed, either an invalid PNG or it wasn't crushed
-                        cStream.Close();
-                        return "";
-                    }
+                    return outpng;
                 }
+                FileStream png = new FileStream(inpng, FileMode.OpenOrCreate);
+                png.Write(bytes, 0, bytes.Length);
+                png.Close();
+                iPNGConverter converter = new iPNGConverter();
+                converter.convert(inpng);
+                return outpng;
+            }
+            else
+            {
+                return input;
             }
         }
     }

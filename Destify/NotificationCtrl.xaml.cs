@@ -45,9 +45,17 @@ namespace DestifySharp
             set { iconsrc = value; }
         }
 
-        public NotificationCtrl( string style)
+        public NotificationCtrl( string style,string icon)
         {
             styledir = style;
+            if (icon == "(null)" || string.IsNullOrEmpty(icon))
+            {
+                iconsrc = "Resources/Destify@2x.png";
+            }
+            else
+            {
+                iconsrc = icon;
+            }
             string tmp = String.Format(@"./{0}/style.ini", styledir);
             styleini = new INIFile(tmp);
             loadSettings();
@@ -86,6 +94,8 @@ namespace DestifySharp
             grid1.Background = new ImageBrush(new BitmapImage(new Uri(tmpbgsrc, UriKind.Relative))); ;
             string tmpclosesrc = String.Format(@"./{0}/{1}", styledir, closeimgsrc);
             image1.Source = new BitmapImage(new Uri(tmpclosesrc, UriKind.Relative));
+            //image2.Source = new BitmapImage(new Uri(iconsrc,UriKind.Relative));
+            image2.Source = (ImageSource)new ImageSourceConverter().ConvertFrom(iconsrc);
         }
 
         private void OnNotificationClosing(object sender, RoutedEventArgs e)
