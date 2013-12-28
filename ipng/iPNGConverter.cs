@@ -29,7 +29,7 @@ namespace IPNGConverter
             return null;
         }
 
-        private void convertPngFile(string pngFile, string targetFile)
+        private bool convertPngFile(string pngFile, string targetFile)
         {
             readTrunks(pngFile);
 
@@ -42,13 +42,11 @@ namespace IPNGConverter
 
                 convertDataTrunk(ihdrTrunk, outputBuffer, nMaxInflateBuffer);
                 writePng(targetFile);
+                return true;
 
-            }
-            else
-            {
+            } 
                 // Likely a standard PNG
-            }
-
+                return false;
         }
 
         private long inflate(out byte[] conversionBuffer, int nMaxInflateBuffer)
@@ -232,10 +230,14 @@ namespace IPNGConverter
             }
         }
 
-        public void convert(string sourceFile)
+        public bool convert(string sourceFile)
         {
             string targetFile = String.Format("{0}-new.png", sourceFile.Substring(0, sourceFile.Length - 4));
-            convertPngFile(sourceFile, targetFile);
+            if(!convertPngFile(sourceFile, targetFile))
+            {
+                return false;
+            }
+            return true;
         }
     }
 }
