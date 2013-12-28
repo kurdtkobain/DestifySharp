@@ -12,13 +12,6 @@ namespace IPNGConverter
     {
         private List<PNGTrunk> trunks = null;
 
-        private string getTargetFile(string convertedFile)
-        {
-            convertedFile = convertedFile.Substring(0, convertedFile.Length - 4);
-            string name = String.Format("{0}-new.png", convertedFile);
-            return name;
-        }
-
         private PNGTrunk getTrunk(String szName)
         {
             if (trunks == null)
@@ -58,25 +51,7 @@ namespace IPNGConverter
 
         }
 
-        private byte[] getInflateData()
-        {
-            byte[] bufferin = null;
-            foreach (PNGTrunk dataTrunk in trunks)
-            {
-                if (dataTrunk.getName().Equals("IDAT", StringComparison.OrdinalIgnoreCase))
-                {
-                    bufferin = new byte[dataTrunk.getData().Length];
-                    bufferin = dataTrunk.getData();
-
-                }
-            }
-            MemoryStream ms = new MemoryStream();
-            DeflateStream deflateStream = new DeflateStream(ms, CompressionMode.Decompress, true);
-            deflateStream.Write(bufferin, 0, bufferin.Length);
-            return ms.GetBuffer(); ;
-        }
-
-        private long inflate(byte[] conversionBuffer, int nMaxInflateBuffer)
+        private long inflate(out byte[] conversionBuffer, int nMaxInflateBuffer)
         {
             byte[] bufferin = null;
             foreach (PNGTrunk dataTrunk in trunks)
@@ -146,8 +121,7 @@ namespace IPNGConverter
 
         private bool convertDataTrunk(PNGIHDRTrunk ihdrTrunk, byte[] conversionBuffer, int nMaxInflateBuffer)
         {
-            long inflatedSize = inflate(conversionBuffer, nMaxInflateBuffer); //cant figure out why conversionBuffer does not get filled with data
-            byte[] conversionData = getInflateData();                         //so i have to get the data manually
+            long inflatedSize = inflate(out conversionBuffer, nMaxInflateBuffer);
 
             // Switch the color
             int nIndex = 0;
@@ -157,14 +131,14 @@ namespace IPNGConverter
                 nIndex++;
                 for (int x = 0; x < ihdrTrunk.m_nWidth; x++)
                 {
-                    nTemp = conversionData[nIndex];
-                    conversionData[nIndex] = conversionData[nIndex + 2];
-                    conversionData[nIndex + 2] = nTemp;
+                    nTemp = conversionBuffer[nIndex];
+                    conversionBuffer[nIndex] = conversionBuffer[nIndex + 2];
+                    conversionBuffer[nIndex + 2] = nTemp;
                     nIndex += 4;
                 }
             }
 
-            ZlibCodec deflater = deflate(conversionData, (int)inflatedSize, nMaxInflateBuffer);
+            ZlibCodec deflater = deflate(conversionBuffer, (int)inflatedSize, nMaxInflateBuffer);
 
             // Put the result in the first IDAT chunk (the only one to be written out)
             PNGTrunk firstDataTrunk = getTrunk("IDAT");
@@ -260,7 +234,7 @@ namespace IPNGConverter
 
         public void convert(string sourceFile)
         {
-            string targetFile = getTargetFile(sourceFile);
+            string targetFile = String.Format("{0}-new.png", sourceFile.Substring(0, sourceFile.Length - 4));
             convertPngFile(sourceFile, targetFile);
         }
     }
