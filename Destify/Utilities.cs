@@ -163,8 +163,7 @@ namespace DestifySharp
                 FileStream png = new FileStream(inpng, FileMode.OpenOrCreate);
                 png.Write(bytes, 0, bytes.Length);
                 png.Close();
-                iPNGConverter converter = new iPNGConverter();
-                if(!converter.convert(inpng))
+                if(!iPNGConverter.convert(inpng))
 				{
 				return inpng;
 				}

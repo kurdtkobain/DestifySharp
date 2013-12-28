@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using Ionic.Crc;
 using Ionic.Zlib;
 
@@ -10,9 +8,9 @@ namespace IPNGConverter
 {
     public class iPNGConverter
     {
-        private List<PNGTrunk> trunks = null;
+        private static List<PNGTrunk> trunks = null;
 
-        private PNGTrunk getTrunk(String szName)
+        private static PNGTrunk getTrunk(String szName)
         {
             if (trunks == null)
             {
@@ -29,7 +27,7 @@ namespace IPNGConverter
             return null;
         }
 
-        private bool convertPngFile(string pngFile, string targetFile)
+        private static bool convertPngFile(string pngFile, string targetFile)
         {
             readTrunks(pngFile);
 
@@ -49,7 +47,7 @@ namespace IPNGConverter
                 return false;
         }
 
-        private long inflate(out byte[] conversionBuffer, int nMaxInflateBuffer)
+        private static long inflate(out byte[] conversionBuffer, int nMaxInflateBuffer)
         {
             byte[] bufferin = null;
             foreach (PNGTrunk dataTrunk in trunks)
@@ -68,7 +66,7 @@ namespace IPNGConverter
             return deflateStream.TotalOut;
         }
 
-        private ZlibCodec deflate(byte[] buffer, int length, int nMaxInflateBuffer)
+        private static ZlibCodec deflate(byte[] buffer, int length, int nMaxInflateBuffer)
         {
             ZlibCodec deflater = new ZlibCodec(CompressionMode.Compress);
             deflater.InitializeDeflate(CompressionLevel.BestCompression);
@@ -96,7 +94,7 @@ namespace IPNGConverter
             return deflater;
         }
 
-        private void checkResultStatus(int nResult)
+        private static void checkResultStatus(int nResult)
         {
             switch (nResult)
             {
@@ -117,7 +115,7 @@ namespace IPNGConverter
             }
         }
 
-        private bool convertDataTrunk(PNGIHDRTrunk ihdrTrunk, byte[] conversionBuffer, int nMaxInflateBuffer)
+        private static bool convertDataTrunk(PNGIHDRTrunk ihdrTrunk, byte[] conversionBuffer, int nMaxInflateBuffer)
         {
             long inflatedSize = inflate(out conversionBuffer, nMaxInflateBuffer);
 
@@ -159,7 +157,7 @@ namespace IPNGConverter
             return false;
         }
 
-        private void writePng(string newFileName)
+        private static void writePng(string newFileName)
         {
             FileStream outStream = new FileStream(newFileName,FileMode.OpenOrCreate);
             try
@@ -196,7 +194,7 @@ namespace IPNGConverter
             }
         }
 
-        private void readTrunks(string pngFile)
+        private static void readTrunks(string pngFile)
         {
             BinaryReader input = new BinaryReader(new FileStream(pngFile,FileMode.OpenOrCreate));
             try
@@ -230,7 +228,7 @@ namespace IPNGConverter
             }
         }
 
-        public bool convert(string sourceFile)
+        public static bool convert(string sourceFile)
         {
             string targetFile = String.Format("{0}-new.png", sourceFile.Substring(0, sourceFile.Length - 4));
             if(!convertPngFile(sourceFile, targetFile))
