@@ -164,13 +164,13 @@ namespace DestifySharp
                 png.Write(bytes, 0, bytes.Length);
                 png.Close();
                 iPNGConverter converter = new iPNGConverter();
-                converter.convert(inpng);
+                if(!converter.convert(inpng))
+				{
+				return inpng;
+				}
                 return outpng;
             }
-            else
-            {
-                return input;
-            }
+            return input;
         }
     }
 }
