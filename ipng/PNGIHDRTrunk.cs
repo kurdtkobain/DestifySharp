@@ -4,16 +4,16 @@ using System.Text;
 
 namespace IPNGConverter
 {
-    public class PNGIHDRTrunk:PNGTrunk
+    public class PngihdrTrunk:PngTrunk
 {
-    public int m_nWidth;
-    public int m_nHeight;
+    public int MnWidth;
+    public int MnHeight;
 
-    public PNGIHDRTrunk(int nSize, String szName, byte[] nData, byte[] nCRC)
+    public PngihdrTrunk(int nSize, String szName, byte[] nData, byte[] nCRC)
         : base(nSize,szName,nData,nCRC)
     {
-        m_nWidth = readInt(nData, 0);
-        m_nHeight = readInt(nData, 4);
+        MnWidth = readInt(nData, 0);
+        MnHeight = readInt(nData, 4);
     }
 }
 }

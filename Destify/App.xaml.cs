@@ -13,48 +13,47 @@ namespace DestifySharp
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    public partial class App : Application
+    public partial class App
     {
-        private TaskbarIcon notifyIcon;
-        private HttpListener listener;
-        private Thread listenerTH;
-        private string port, theme, cipher;
-        private int displaytime;
-        bool running = true;
-        private INIFile settings = new INIFile("settings.ini");
+        private TaskbarIcon _notifyIcon;
+        private HttpListener _listener;
+        private Thread _listenerTh;
+        private string _port, _theme, _cipher;
+        private int _displaytime;
+        bool _running = true;
+        private readonly INIFile _settings = new INIFile("settings.ini");
 
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            this.MainWindow = new MainWindow();
+            MainWindow = new MainWindow();
             loadSettings();
-            notifyIcon = (TaskbarIcon)FindResource("NotifyIcon");
-            listener = new HttpListener();
-            string prefixes = String.Format(@"http://+:{0}/", port);
-            listener.Prefixes.Add(prefixes);
-            listener.AuthenticationSchemes = AuthenticationSchemes.Anonymous;
+            _notifyIcon = (TaskbarIcon)FindResource("NotifyIcon");
+            _listener = new HttpListener();
+            string prefixes = String.Format(@"http://+:{0}/", _port);
+            _listener.Prefixes.Add(prefixes);
+            _listener.AuthenticationSchemes = AuthenticationSchemes.Anonymous;
             try
             {
-                listener.Start();
-                this.listenerTH = new Thread(new ParameterizedThreadStart(startListener));
-                this.listenerTH.Name = @"HTTPListener Thread";
-                this.listenerTH.SetApartmentState(ApartmentState.STA);
-                this.listenerTH.Start();
-                string text = String.Format("{0}:{1}", Utilities.localIPAddress(), port);
-                notifyIcon.ShowBalloonTip(@"Server Started", text, notifyIcon.Icon);
+                _listener.Start();
+                _listenerTh = new Thread(startListener) {Name = @"HTTPListener Thread"};
+                _listenerTh.SetApartmentState(ApartmentState.STA);
+                _listenerTh.Start();
+                string text = String.Format("{0}:{1}", Utilities.localIpAddress(), _port);
+                if (_notifyIcon != null) _notifyIcon.ShowBalloonTip(@"Server Started", text, _notifyIcon.Icon);
             }
             catch
             {
-                notifyIcon.ShowBalloonTip(@"Error", "Failed to start server, could not bind port.", BalloonIcon.Error);
+                if (_notifyIcon != null) _notifyIcon.ShowBalloonTip(@"Error", "Failed to start server, could not bind port.", BalloonIcon.Error);
             }
         }
 
         protected override void OnExit(ExitEventArgs e)
         {
-            notifyIcon.Dispose();
-            terminateListenerTH();
-            if (listener.IsListening) listener.Stop();
+            _notifyIcon.Dispose();
+            terminateListenerTh();
+            if (_listener.IsListening) _listener.Stop();
             base.OnExit(e);
         }
 
@@ -81,23 +80,24 @@ namespace DestifySharp
             {
                 if (input[i] == "(null)") input[i] = "";
             }
-            NotificationCtrl alert = new NotificationCtrl(theme, input[7]);
+            var alert = new NotificationCtrl(_theme);
             if (input[5] == "iMessage")
             {
-                alert.Title = String.Format(@"iMessage: {0}", input[2]);
-                alert.Topic = "";
+                alert.title = String.Format(@"iMessage: {0}", input[2]);
+                alert.topic = "";
             }
             else
             {
-                alert.Title = input[2];
-                alert.Topic = input[5];
+                alert.title = input[2];
+                alert.topic = input[5];
             }
 
-            alert.Subtitle = input[3];
-            alert.Message = input[4];
-            alert.Time = input[6];
+            alert.subtitle = input[3];
+            alert.message = input[4];
+            alert.time = input[6];
+            alert.icon = input[7];
 
-            notifyIcon.ShowCustomBalloon(alert, PopupAnimation.Slide, displaytime * 1000);
+            _notifyIcon.ShowCustomBalloon(alert, PopupAnimation.Slide, _displaytime * 1000);
         }
 
         /// <summary>
@@ -105,29 +105,17 @@ namespace DestifySharp
         /// </summary>
         void loadSettings()
         {
-            port = settings.GetValue("System", "Port", "3128");
-            displaytime = settings.GetValue("System", "notifytime", 4);
-            cipher = settings.GetValue("System", "cipher", "");
-            theme = settings.GetValue("Theme", "folder", "default");
-        }
-
-        /// <summary>
-        /// Saves settings.
-        /// </summary>
-        void saveSettings()
-        {
-            settings.SetValue("System", "Port", port);
-            settings.SetValue("System", "notifytime", displaytime);
-            settings.SetValue("System", "cipher", cipher);
-            settings.SetValue("Theme", "folder", theme);
-            settings.Flush();
+            _port = _settings.GetValue("System", "Port", "3128");
+            _displaytime = _settings.GetValue("System", "notifytime", 4);
+            _cipher = _settings.GetValue("System", "cipher", "");
+            _theme = _settings.GetValue("Theme", "folder", "default");
         }
 
         private void startListener(object s)
         {
             while (true)
             {
-                if (!running) break;
+                if (!_running) break;
                 processRequest();
             }
         }
@@ -135,30 +123,30 @@ namespace DestifySharp
         /// <summary>
         /// Shuts down listener thread.
         /// </summary>
-        void terminateListenerTH()
+        void terminateListenerTh()
         {
-            running = false;
+            _running = false;
         }
 
         private void processRequest()
         {
-            var result = listener.BeginGetContext(listenerCallback, listener);
+            var result = _listener.BeginGetContext(listenerCallback, _listener);
             result.AsyncWaitHandle.WaitOne();
         }
 
         private void listenerCallback(IAsyncResult result)
         {
-            if (!running) return;
-            var context = listener.EndGetContext(result);
+            if (!_running) return;
+            var context = _listener.EndGetContext(result);
             Thread.Sleep(1000);
             if (context.Request.HttpMethod == "POST")
             {
-                string data_text = new StreamReader(context.Request.InputStream,
+                string dataText = new StreamReader(context.Request.InputStream,
                                                     context.Request.ContentEncoding).ReadToEnd();
-                bool shouldDecode = !data_text.Contains("Destify");
-                if (cipher == "") shouldDecode = false;
-                string[] lines = Regex.Split(data_text, "\r\n");
-                string[] values = new string[9];
+                bool shouldDecode = !dataText.Contains("Destify");
+                if (_cipher == "") shouldDecode = false;
+                string[] lines = Regex.Split(dataText, "\r\n");
+                var values = new string[9];
                 for (int i = 0; i < lines.Length - 1; i++)
                 {
                     string s = lines[i];
@@ -169,7 +157,7 @@ namespace DestifySharp
                         {
                             if (tmp[0] != "time" || tmp[0] != "icon")
                             {
-                                values[i] = Utilities.decode(tmp[1], cipher);
+                                values[i] = Utilities.decode(tmp[1], _cipher);
                             }else
                             {
                                 values[i] = tmp[1];
@@ -184,16 +172,16 @@ namespace DestifySharp
 
                 if (values[1] == "Destify")
                 {
-                    this.Dispatcher.Invoke((Action)(() => sendNotify(values)));
+                    Dispatcher.Invoke((Action)(() => sendNotify(values)));
                 }
                 else
                 {
-                    notifyIcon.ShowBalloonTip(@"Decoding failed!", @"Please check your Cipher Key!", notifyIcon.Icon);
+                    _notifyIcon.ShowBalloonTip(@"Decoding failed!", @"Please check your Cipher Key!", _notifyIcon.Icon);
                 }
             }
             else
             {
-                string responseString = "<html><head><title>DestifySharp by KAMY Studios</title></head><body><meta HTTP-EQUIV=\"REFRESH\" content=\"0; url=http://kamy.tk\"></body></html>";
+                const string responseString = "<html><head><title>DestifySharp by KAMY Studios</title></head><body><meta HTTP-EQUIV=\"REFRESH\" content=\"0; url=http://kamy.tk\"></body></html>";
                 byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
                 context.Response.ContentLength64 = buffer.Length;
                 Stream output = context.Response.OutputStream;

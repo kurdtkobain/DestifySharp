@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -15,113 +16,106 @@ namespace DestifySharp
     /// </summary>
     public partial class NotificationCtrl : UserControl
     {
-        private INIFile styleini;
-        private double width, height;
-        private string closeimgsrc, bgimgsrc, styledir, iconsrc;
-        private bool isClosing = false;
+        private readonly INIFile _styleini;
+        private double _width, _height;
+        private string _closeimgsrc, _bgimgsrc, _iconsrc;
+        private readonly string _styledir;
+        private bool _isClosing = false;
 
-        public string Title
+        public string title
         {
             set { titleLbl.Text = value; }
         }
-        public string Subtitle
+        public string subtitle
         {
             set { subtitleLbl.Text = value; }
         }
-        public string Message
+        public string message
         {
             set { messageLbl.Text = value; }
         }
-        public string Topic
+        public string topic
         {
-            set { topicLbl.Text = value; }
+            set {topicLbl.Text = value;}
         }
-        public string Time
+        public string time
         {
-            set { timeLbl.Text = value; }
+            set
+            {
+                var dateTime = Convert.ToDateTime(value);
+                timeLbl.Text = dateTime.ToString("h:mm tt", CultureInfo.InvariantCulture);
+            }
         }
-        public string Icon
+        public string icon
         {
-            set { iconsrc = value; }
+            set { _iconsrc = value; }
         }
 
-        public NotificationCtrl( string style,string icon)
+        public NotificationCtrl( string style)
         {
-            styledir = style;
-            if (icon == "(null)" || string.IsNullOrEmpty(icon))
-            {
-                iconsrc = "Resources/Destify@2x.png";
-            }
-            else
-            {
-                iconsrc = icon;
-            }
-            string tmp = String.Format(@"./{0}/style.ini", styledir);
-            styleini = new INIFile(tmp);
+            _styledir = style;
+            string tmp = String.Format(@"./{0}/style.ini", _styledir);
+            _styleini = new INIFile(tmp);
             loadSettings();
             InitializeComponent();
-            setup();
-            
 
-            TaskbarIcon.AddBalloonClosingHandler(this, OnNotificationClosing);
+            TaskbarIcon.AddBalloonClosingHandler(this, onNotificationClosing);
         }
 
         void loadSettings()
         {
-            width = styleini.GetValue("Window", "width", this.Width);
-            height = styleini.GetValue("Window", "height", this.Height);
-            bgimgsrc = styleini.GetValue("Window", "bgimage", "BG.png");
-            closeimgsrc = styleini.GetValue("Window", "closeimg", "Close.gif");
+            _width = _styleini.GetValue("Window", "width", Width);
+            _height = _styleini.GetValue("Window", "height", Height);
+            _bgimgsrc = _styleini.GetValue("Window", "bgimage", "BG.png");
+            _closeimgsrc = _styleini.GetValue("Window", "closeimg", "Close.gif");
 
-
-        }
-
-        void saveSettings()
-        {
-            styleini.SetValue("Window", "width", width);
-            styleini.SetValue("Window", "height", height);
-            styleini.SetValue("Window", "bgimage", bgimgsrc);
-            styleini.SetValue("Window", "closeimg", closeimgsrc);
-            styleini.Flush();
 
         }
 
         void setup()
         {
-            this.Width = width;
-            this.Height = height;
-            string tmpbgsrc = String.Format(@"./{0}/{1}",styledir,bgimgsrc);
-            grid1.Background = new ImageBrush(new BitmapImage(new Uri(tmpbgsrc, UriKind.Relative))); ;
-            string tmpclosesrc = String.Format(@"./{0}/{1}", styledir, closeimgsrc);
+            Width = _width;
+            Height = _height;
+            string tmpbgsrc = String.Format(@"./{0}/{1}",_styledir,_bgimgsrc);
+            grid1.Background = new ImageBrush(new BitmapImage(new Uri(tmpbgsrc, UriKind.Relative)));
+            string tmpclosesrc = String.Format(@"./{0}/{1}", _styledir, _closeimgsrc);
             image1.Source = new BitmapImage(new Uri(tmpclosesrc, UriKind.Relative));
-            //image2.Source = new BitmapImage(new Uri(iconsrc,UriKind.Relative));
-            image2.Source = (ImageSource)new ImageSourceConverter().ConvertFrom(iconsrc);
+            if (_iconsrc == "(null)" || string.IsNullOrEmpty(_iconsrc))
+            {
+                _iconsrc = "Resources/Destify@2x.png";
+            }
+            image2.Source = (ImageSource)new ImageSourceConverter().ConvertFrom(_iconsrc);
         }
 
-        private void OnNotificationClosing(object sender, RoutedEventArgs e)
+        private void onNotificationClosing(object sender, RoutedEventArgs e)
         {
             e.Handled = true; //suppresses the popup from being closed immediately
-            isClosing = true;
+            _isClosing = true;
         }
 
-        private void image1_MouseDown(object sender, MouseButtonEventArgs e)
+        private void image1MouseDown(object sender, MouseButtonEventArgs e)
         {
             TaskbarIcon taskbarIcon = TaskbarIcon.GetParentTaskbarIcon(this);
             taskbarIcon.CloseBalloon();
         }
 
-        private void Grid_MouseEnter(object sender, MouseEventArgs e)
+        private void gridMouseEnter(object sender, MouseEventArgs e)
         {
-            if (isClosing) return;
+            if (_isClosing) return;
 
             TaskbarIcon taskbarIcon = TaskbarIcon.GetParentTaskbarIcon(this);
             taskbarIcon.ResetBalloonCloseTimer();
         }
 
-        private void OnFadeOutCompleted(object sender, EventArgs e)
+        private void onFadeOutCompleted(object sender, EventArgs e)
         {
-            Popup pp = (Popup)Parent;
+            var pp = (Popup)Parent;
             pp.IsOpen = false;
+        }
+
+        private void userControlLoaded(object sender, RoutedEventArgs e)
+        {
+            setup();
         }
     }
 }

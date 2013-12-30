@@ -1,30 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Ionic.Crc;
 using Ionic.Zlib;
 
 namespace IPNGConverter
 {
-    public class iPNGConverter
+    public class PngConverter
     {
-        private static List<PNGTrunk> trunks = null;
+        private static List<PngTrunk> _trunks;
 
-        private static PNGTrunk getTrunk(String szName)
+        private static PngTrunk getTrunk(String szName)
         {
-            if (trunks == null)
+            if (_trunks == null)
             {
                 return null;
             }
-            foreach (PNGTrunk trunktmp in trunks)
-            {
-                if(trunktmp.getName().Equals(szName,StringComparison.OrdinalIgnoreCase))
-                {
-                    return trunktmp;
-                }
-                
-            }
-            return null;
+            return _trunks.FirstOrDefault(trunktmp => trunktmp.getName().Equals(szName, StringComparison.OrdinalIgnoreCase));
         }
 
         private static bool convertPngFile(string pngFile, string targetFile)
@@ -33,10 +26,10 @@ namespace IPNGConverter
 
             if (getTrunk("CgBI") != null)
             {
-                PNGIHDRTrunk ihdrTrunk = (PNGIHDRTrunk) getTrunk("IHDR");
+                var ihdrTrunk = (PngihdrTrunk) getTrunk("IHDR");
 
-                int nMaxInflateBuffer = 4*(ihdrTrunk.m_nWidth + 1)*ihdrTrunk.m_nHeight;
-                byte[] outputBuffer = new byte[nMaxInflateBuffer];
+                int nMaxInflateBuffer = 4*(ihdrTrunk.MnWidth + 1)*ihdrTrunk.MnHeight;
+                var outputBuffer = new byte[nMaxInflateBuffer];
 
                 convertDataTrunk(ihdrTrunk, outputBuffer, nMaxInflateBuffer);
                 writePng(targetFile);
@@ -47,28 +40,26 @@ namespace IPNGConverter
                 return false;
         }
 
-        private static long inflate(out byte[] conversionBuffer, int nMaxInflateBuffer)
+        private static void inflate(out byte[] conversionBuffer)
         {
             byte[] bufferin = null;
-            foreach (PNGTrunk dataTrunk in trunks)
+            foreach (PngTrunk dataTrunk in _trunks)
             {
                 if (dataTrunk.getName().Equals("IDAT", StringComparison.OrdinalIgnoreCase))
                 {
-                    bufferin = new byte[dataTrunk.getData().Length];
                     bufferin = dataTrunk.getData();
 
                 }
             }
-            MemoryStream ms = new MemoryStream();
-            DeflateStream deflateStream = new DeflateStream(ms,CompressionMode.Decompress,true);
-            deflateStream.Write(bufferin,0,bufferin.Length);
+            var ms = new MemoryStream();
+            var deflateStream = new DeflateStream(ms,CompressionMode.Decompress,true);
+            if (bufferin != null) deflateStream.Write(bufferin,0,bufferin.Length);
             conversionBuffer = ms.GetBuffer();
-            return deflateStream.TotalOut;
         }
 
-        private static ZlibCodec deflate(byte[] buffer, int length, int nMaxInflateBuffer)
+        private static ZlibCodec deflate(byte[] buffer, int nMaxInflateBuffer)
         {
-            ZlibCodec deflater = new ZlibCodec(CompressionMode.Compress);
+            var deflater = new ZlibCodec(CompressionMode.Compress);
             deflater.InitializeDeflate(CompressionLevel.BestCompression);
             deflater.InputBuffer = buffer;
             deflater.AvailableBytesIn = buffer.Length;
@@ -76,7 +67,7 @@ namespace IPNGConverter
             //deflater.setInput(buffer, 0, length, false);
 
             int nMaxDeflateBuffer = nMaxInflateBuffer + 1024;
-            byte[] deBuffer = new byte[nMaxDeflateBuffer];
+            var deBuffer = new byte[nMaxDeflateBuffer];
             deflater.OutputBuffer = deBuffer;
             deflater.AvailableBytesOut = deBuffer.Length;
             deflater.NextOut = 0;
@@ -115,57 +106,55 @@ namespace IPNGConverter
             }
         }
 
-        private static bool convertDataTrunk(PNGIHDRTrunk ihdrTrunk, byte[] conversionBuffer, int nMaxInflateBuffer)
+        private static void convertDataTrunk(PngihdrTrunk ihdrTrunk, byte[] conversionBuffer, int nMaxInflateBuffer)
         {
-            long inflatedSize = inflate(out conversionBuffer, nMaxInflateBuffer);
+            if (conversionBuffer == null) throw new ArgumentNullException("conversionBuffer");
+            inflate(out conversionBuffer);
 
             // Switch the color
             int nIndex = 0;
-            byte nTemp;
-            for (int y = 0; y < ihdrTrunk.m_nHeight; y++)
+            for (int y = 0; y < ihdrTrunk.MnHeight; y++)
             {
                 nIndex++;
-                for (int x = 0; x < ihdrTrunk.m_nWidth; x++)
+                for (int x = 0; x < ihdrTrunk.MnWidth; x++)
                 {
-                    nTemp = conversionBuffer[nIndex];
+                    byte nTemp = conversionBuffer[nIndex];
                     conversionBuffer[nIndex] = conversionBuffer[nIndex + 2];
                     conversionBuffer[nIndex + 2] = nTemp;
                     nIndex += 4;
                 }
             }
 
-            ZlibCodec deflater = deflate(conversionBuffer, (int)inflatedSize, nMaxInflateBuffer);
+            ZlibCodec deflater = deflate(conversionBuffer, nMaxInflateBuffer);
 
             // Put the result in the first IDAT chunk (the only one to be written out)
-            PNGTrunk firstDataTrunk = getTrunk("IDAT");
+            PngTrunk firstDataTrunk = getTrunk("IDAT");
 
-            CRC32 crc32 = new CRC32();
+            var crc32 = new CRC32();
             foreach (byte b in System.Text.Encoding.UTF8.GetBytes(firstDataTrunk.getName()))
             {
                 crc32.UpdateCRC(b);
             }
                 crc32.UpdateCRC((byte)deflater.NextOut,(int)deflater.TotalBytesOut);
-            long lCRCValue = crc32.Crc32Result;
+            long lCrcValue = crc32.Crc32Result;
 
-            firstDataTrunk.m_nData = deflater.OutputBuffer;
-            firstDataTrunk.m_nCRC[0] = (byte) ((lCRCValue & 0xFF000000) >> 24);
-            firstDataTrunk.m_nCRC[1] = (byte) ((lCRCValue & 0xFF0000) >> 16);
-            firstDataTrunk.m_nCRC[2] = (byte) ((lCRCValue & 0xFF00) >> 8);
-            firstDataTrunk.m_nCRC[3] = (byte) (lCRCValue & 0xFF);
-            firstDataTrunk.m_nSize = (int) deflater.TotalBytesOut;
-
-            return false;
+            firstDataTrunk.MnData = deflater.OutputBuffer;
+            firstDataTrunk.MnCrc[0] = (byte) ((lCrcValue & 0xFF000000) >> 24);
+            firstDataTrunk.MnCrc[1] = (byte) ((lCrcValue & 0xFF0000) >> 16);
+            firstDataTrunk.MnCrc[2] = (byte) ((lCrcValue & 0xFF00) >> 8);
+            firstDataTrunk.MnCrc[3] = (byte) (lCrcValue & 0xFF);
+            firstDataTrunk.MnSize = (int) deflater.TotalBytesOut;
         }
 
         private static void writePng(string newFileName)
         {
-            FileStream outStream = new FileStream(newFileName,FileMode.OpenOrCreate);
+            var outStream = new FileStream(newFileName,FileMode.OpenOrCreate);
             try
             {
                 byte[] pngHeader = {unchecked((byte)-119), 80, 78, 71, 13, 10, 26, 10};
                 outStream.Write(pngHeader,0,pngHeader.Length);
                 bool dataWritten = false;
-                foreach (PNGTrunk trunk in trunks)
+                foreach (PngTrunk trunk in _trunks)
                 {
                     if (trunk.getName().Equals("CgBI",StringComparison.OrdinalIgnoreCase))
                     {
@@ -177,10 +166,7 @@ namespace IPNGConverter
                         {
                             continue;
                         }
-                        else
-                        {
-                            dataWritten = true;
-                        }
+                        dataWritten = true;
                     }
 
                     trunk.writeToStream(outStream);
@@ -196,24 +182,21 @@ namespace IPNGConverter
 
         private static void readTrunks(string pngFile)
         {
-            BinaryReader input = new BinaryReader(new FileStream(pngFile,FileMode.OpenOrCreate));
+            var input = new BinaryReader(new FileStream(pngFile,FileMode.OpenOrCreate));
             try
             {
-                byte[] nPNGHeader = new byte[8];
-                nPNGHeader=input.ReadBytes(8);
+                byte[] nPngHeader = input.ReadBytes(8);
 
-                trunks = new List<PNGTrunk>();
-                if ((nPNGHeader[0] == unchecked((byte)(-119))) && (nPNGHeader[1] == 0x50)
-                    && (nPNGHeader[2] == 0x4e) && (nPNGHeader[3] == 0x47)
-                    && (nPNGHeader[4] == 0x0d) && (nPNGHeader[5] == 0x0a)
-                    && (nPNGHeader[6] == 0x1a) && (nPNGHeader[7] == 0x0a))
+                _trunks = new List<PngTrunk>();
+                if ((nPngHeader[0] == unchecked((byte)(-119))) && (nPngHeader[1] == 0x50)
+                    && (nPngHeader[2] == 0x4e) && (nPngHeader[3] == 0x47)
+                    && (nPngHeader[4] == 0x0d) && (nPngHeader[5] == 0x0a)
+                    && (nPngHeader[6] == 0x1a) && (nPngHeader[7] == 0x0a))
                 {
-
-                    PNGTrunk trunk;
                     while(true)
                     {
-                        trunk = PNGTrunk.generateTrunk(input);
-                        trunks.Add(trunk);
+                        PngTrunk trunk = PngTrunk.generateTrunk(input);
+                        _trunks.Add(trunk);
                         if (trunk.getName().Equals("IEND", StringComparison.OrdinalIgnoreCase))
                         {
                             break;

@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Globalization;
+using System.Windows;
 using STA.Settings;
 
 namespace DestifySharp
@@ -6,44 +7,44 @@ namespace DestifySharp
     /// <summary>
     /// Interaction logic for Options.xaml
     /// </summary>
-    public partial class Options : Window
+    public partial class Options
     {
-        INIFile settings = new INIFile("settings.ini");
-        private string port, theme,cipher;
-        private int displaytime;
+        readonly INIFile _settings = new INIFile("settings.ini");
+        private string _port, _theme,_cipher;
+        private int _displaytime;
         public Options()
         {
             InitializeComponent();
             loadSettings();
-            this.textBox1.Text = port;
-            this.textBox2.Text = displaytime.ToString();
-            this.textBox3.Text = theme;
-            this.textBox4.Text = cipher;
+            textBox1.Text = _port;
+            textBox2.Text = _displaytime.ToString(CultureInfo.InvariantCulture);
+            textBox3.Text = _theme;
+            textBox4.Text = _cipher;
         }
 
-        private void button1_Click(object sender, RoutedEventArgs e)
+        private void button1Click(object sender, RoutedEventArgs e)
         {
-            port = this.textBox1.Text;
-            displaytime = int.Parse(textBox2.Text);
-            theme = this.textBox3.Text;
-            cipher = this.textBox4.Text;
+            _port = textBox1.Text;
+            _displaytime = int.Parse(textBox2.Text);
+            _theme = textBox3.Text;
+            _cipher = textBox4.Text;
             saveSettings();
         }
         void loadSettings()
         {
-            port = settings.GetValue("System", "Port", "3128");
-            displaytime = settings.GetValue("System", "notifytime", 4);
-            cipher = settings.GetValue("System", "cipher", "");
-            theme = settings.GetValue("Theme", "folder", "default");
+            _port = _settings.GetValue("System", "Port", "3128");
+            _displaytime = _settings.GetValue("System", "notifytime", 4);
+            _cipher = _settings.GetValue("System", "cipher", "");
+            _theme = _settings.GetValue("Theme", "folder", "default");
         }
 
         void saveSettings()
         {
-            settings.SetValue("System", "Port", port);
-            settings.SetValue("System", "notifytime", displaytime);
-            settings.SetValue("System", "cipher", cipher);
-            settings.SetValue("Theme", "folder", theme);
-            settings.Flush();
+            _settings.SetValue("System", "Port", _port);
+            _settings.SetValue("System", "notifytime", _displaytime);
+            _settings.SetValue("System", "cipher", _cipher);
+            _settings.SetValue("Theme", "folder", _theme);
+            _settings.Flush();
         }
     }
 }

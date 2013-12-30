@@ -13,50 +13,49 @@ namespace DestifySharp
         /// <summary>
         /// Gets local IP address.
         /// </summary>
-        public static string localIPAddress()
+        public static string localIpAddress()
         {
-            IPHostEntry host;
-            string localIP = "";
-            host = Dns.GetHostEntry(Dns.GetHostName());
+            string localIp = "";
+            IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
             foreach (IPAddress ip in host.AddressList)
             {
                 if (ip.AddressFamily == AddressFamily.InterNetwork)
                 {
-                    localIP = ip.ToString();
+                    localIp = ip.ToString();
                     break;
                 }
             }
-            return localIP;
+            return localIp;
         }
 
         /// <summary>
         /// Decodes string.
         /// </summary>
-        public static String decode(String NText, String code)
+        public static String decode(String nText, String code)
         {
-            StringBuilder ctext = new StringBuilder();
+            var ctext = new StringBuilder();
 
             int a = 0;
-            for (int i = 0; i < NText.Length; i++)
+            foreach (char t in nText)
             {
                 char key = code.ToUpper()[a % code.Length];
-                char aCh = NText[i];
-                char nCh = ' ';
+                char aCh = t;
+                char nCh;
 
                 if (aCh >= 65 && aCh <= 90)
                 {
-                    aCh = NText[i];
+                    aCh = t;
                     nCh = (char)(aCh + 65 - key);
-                    if ((int)nCh < 65) { nCh += (char)(26); }
-                    if (NText[i] >= 97) { nCh += (char)(32); }
+                    if (nCh < 65) { nCh += (char)(26); }
+                    if (t >= 97) { nCh += (char)(32); }
                     ctext.Append(nCh);
                     a++;
                 }
                 else if (aCh >= 97 && aCh <= 122)
                 {
-                    aCh = NText[i];
+                    aCh = t;
                     nCh = (char)(aCh + 65 - key);
-                    if ((int)nCh < 97)
+                    if (nCh < 97)
                     {
                         nCh += (char)(26);
                     }
@@ -65,8 +64,7 @@ namespace DestifySharp
                 }
                 else
                 {
-                    nCh = (char)(aCh);
-                    ctext.Append(NText[i]);
+                    ctext.Append(t);
                 }
             }
             return ctext.ToString();
@@ -77,12 +75,12 @@ namespace DestifySharp
         /// </summary>
         public static String encode(String text, String code)
         {
-            StringBuilder ctext = new StringBuilder();
+            var ctext = new StringBuilder();
             for (int i = 0, a = 0; i < text.Length; i++)
             {
-                int kiCh = (int)code.ToUpper()[a % code.Length];
-                int aiCh = (int)text[i];
-                int niCh = (int)' ';
+                var kiCh = (int)code.ToUpper()[a % code.Length];
+                var aiCh = (int)text[i];
+                int niCh;
                 if (aiCh >= 65 && aiCh <= 90)
                 {
                     aiCh = text[i];
@@ -111,15 +109,15 @@ namespace DestifySharp
         /// <summary>
         /// Native C# version of hexStringToByteArray
         /// </summary>
-        public static byte[] StringToByteArray(String hex)
+        public static byte[] stringToByteArray(String hex)
         {
             hex = hex.Substring(1, hex.Length - 1).Replace(" ", "");
-            int NumberChars = hex.Length / 2;
-            byte[] bytes = new byte[NumberChars];
-            using (StringReader sr = new StringReader(hex))
+            int numberChars = hex.Length / 2;
+            var bytes = new byte[numberChars];
+            using (var sr = new StringReader(hex))
             {
-                for (int i = 0; i < NumberChars; i++)
-                    bytes[i] = Convert.ToByte(new string(new char[2] { (char)sr.Read(), (char)sr.Read() }), 16);
+                for (int i = 0; i < numberChars; i++)
+                    bytes[i] = Convert.ToByte(new string(new[] { (char)sr.Read(), (char)sr.Read() }), 16);
             }
             return bytes;
         }
@@ -127,13 +125,13 @@ namespace DestifySharp
         /// <summary>
         /// C# port of Destify's MD5
         /// </summary>
-        public static String MD5(String md5S)
+        public static String md5(String md5S)
         {
             try
             {
                 MD5 md = new MD5CryptoServiceProvider();
                 byte[] array = md.ComputeHash(Encoding.UTF8.GetBytes(md5S));
-                StringBuilder  sb = new StringBuilder ();
+                var  sb = new StringBuilder ();
 
                 for (int i = 0; i < array.Length; ++i)
                 {
@@ -152,18 +150,18 @@ namespace DestifySharp
         {
             if (input != "(null)" || input != "")
             {
-                string fHash = Utilities.MD5(input);
-                byte[] bytes = Utilities.StringToByteArray(input);
+                string fHash = md5(input);
+                byte[] bytes = stringToByteArray(input);
                 string inpng = String.Format("./Resources/{0}.png", fHash);
                 string outpng = String.Format("./Resources/{0}-new.png", fHash);
                 if(File.Exists(outpng))
                 {
                     return outpng;
                 }
-                FileStream png = new FileStream(inpng, FileMode.OpenOrCreate);
+                var png = new FileStream(inpng, FileMode.OpenOrCreate);
                 png.Write(bytes, 0, bytes.Length);
                 png.Close();
-                if(!iPNGConverter.convert(inpng))
+                if(!PngConverter.convert(inpng))
 				{
 				return inpng;
 				}
